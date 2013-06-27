@@ -19,7 +19,6 @@ class Controller {
         ros::NodeHandle node_;
         ForceCompensator *force_compensator_;
         geometry_msgs::Wrench force_output_;
-        double imu_data_timeout_;
 
         //Wrench output (raw forces) 
         double wrench_cmd_time_,wrench_cmd_timeout_;
@@ -42,7 +41,7 @@ class Controller {
         double spd_cmd_;
         double max_fwd_vel_,max_fwd_force_,max_bck_vel_,max_bck_force_;
         
-
+        int control_mode; //Helm, Heading or Raw Wrench
 
     public:
         Controller(ros::NodeHandle &n);
@@ -52,78 +51,12 @@ class Controller {
 
         double yr_compensator();
         double y_compensator();
-
-
-        void wrench_callback(const geometry_msgs::Wrench msg) { 
-            force_output_.force.x = msg.force.x;
-            force_output_.torque.z = msg.torque.z;
-            wrench_cmd_time_ = ros::Time::now().toSec();
-        }
-
-        void heading_callback(const kingfisher_msgs::Heading msg) {
-            y_cmd_ = msg.heading;
-            y_cmd_time_ = ros::Time::now().toSec();
-
-            spd_cmd_ = msg.speed;
-            force_output_.force.x = speed_control(); //TODO: Can run in its own callback once speed feedback is available
-        }            
-
-        void helm_callback(const kingfisher_msgs::Helm msg) { 
-            //Basic Helm Control
-            double thrust_pct = msg.thrust_pct;
-            if (thrust_pct >= 0)
-                force_output_.force.x = thrust_pct * (max_fwd_force_/100);
-            else
-                force_output_.force.x = -thrust_pct * (max_bck_force_/100);
-            yr_cmd_ = msg.yaw_rate;
-            yr_cmd_time_ = ros::Time::now().toSec();
-
-        }
-
-        void imu_callback(const sensor_msgs::Imu msg) {
-            yr_meas_ = msg.angular_velocity.z;
-            yr_meas_time_ = ros::Time::now().toSec();
-
-            y_meas_ = tf::getYaw(msg.orientation);
-            y_meas_time_ = ros::Time::now().toSec();
-
-            if (ros::Time::now().toSec() - y_cmd_time_ < y_cmd_timeout_) { //prioritize yaw command 
-                ROS_INFO("Yaw Measurement:%f", y_meas_);
-                yr_cmd_ = y_compensator();
-                force_output_.torque.z = yr_compensator();
-            }
-            else if(ros::Time::now().toSec() - yr_cmd_time_ < yr_cmd_timeout_) {
-                force_output_.torque.z  = yr_compensator(); 
-            }
-            else if(ros::Time::now().toSec() - wrench_cmd_time_ < wrench_cmd_timeout_) {
-                //TODO:Maybe do the filling in of forces here?
-                //Do nothing, force output is already filled
-            }
-            else {
-                ROS_INFO("Command Timeout");
-                force_output_.torque.z = 0;
-                force_output_.force.z = 0;             
-            }
-
-        }
-
-        void control_update(const ros::TimerEvent& event) {
-            force_compensator_->update_forces(force_output_);
-        }
-
-        double speed_control() {
-            if (spd_cmd_ >= 0)
-                return (spd_cmd_*(max_fwd_force_/max_fwd_vel_));
-            else
-                return (spd_cmd_*(max_bck_force_/max_bck_vel_));
-        }
+        void wrench_callback(const geometry_msgs::Wrench msg);
+        void heading_callback(const kingfisher_msgs::Heading msg); 
+        void helm_callback(const kingfisher_msgs::Helm msg); 
+        void imu_callback(const sensor_msgs::Imu msg);
+        void control_update(const ros::TimerEvent& event);
+        double speed_control();
 };
-
-             
-
-
-
-
-
 
     
