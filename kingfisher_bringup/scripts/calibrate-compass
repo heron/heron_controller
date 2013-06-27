@@ -73,10 +73,10 @@ if [[ -r $CAL_FILE ]]; then
   echo "Calibration generated in $CAL_FILE."
   read -r -p "Copy calibration to /etc/ros/fuerte/kingfisher? [Y/n] " response
   response=${response,,}    # tolower
-  if [[ $response =~ ^(yes|y)$ ]]; then
+  if [[ $response =~ ^(no|n)$ ]]; then
+    echo "Skipping."
+  else
     sudo cp $CAL_FILE /etc/ros/fuerte/kingfisher
     echo "Restart ROS service to begin using saved calibration."
-  else
-    echo "Skipping."
   fi
 fi
