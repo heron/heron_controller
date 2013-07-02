@@ -9,13 +9,17 @@
 
 
 <param name="yaw/kf" value="5"/>
-<param name="yaw/kp" value="4"/>
-<param name="yaw/ki" value="3"/>
-<param name="yaw/kd" value="3"/>
+<param name="yaw/kp" value="0.8"/>
+<param name="yaw/ki" value="0"/>
+<param name="yaw/kd" value="0.3"/>
 <param name="yaw/imax" value="5.0"/>
 <param name="yaw/imin" value="-5.0"/>
 
 
-<node pkg="kingfisher_node" type="controller" name="controller" output="screen"/>
+<node pkg="kingfisher_node" type="controller" name="controller" output="screen">
+    <remap from="imu/data" to="imu/data_final"/>
+</node>
+
+
 
 </launch>

@@ -9,19 +9,14 @@ class ForceCompensator
         ros::NodeHandle node_;
         ros::Publisher cmd_pub_;
         ros::Publisher eff_pub_;
-
     public:
-
-        ForceCompensator(ros::NodeHandle &n): node_(n) {
-            cmd_pub_ = node_.advertise<kingfisher_msgs::Drive>("cmd_drive",1000);
-            eff_pub_ = node_.advertise<geometry_msgs::Wrench>("eff_wrench",1000);
-        }
+        ForceCompensator(ros::NodeHandle &n);
         ~ForceCompensator() {
         }
 
-        double get_output (double thrust);
+        double calculate_motor_setting (double thrust);
         double saturate_thrusters (double thrust);
-        void update_forces (geometry_msgs::Wrench output);
+        void pub_thrust_cmd (geometry_msgs::Wrench output);
         void pub_effective_wrench(double left_thrust,double right_thrust);
 
 };

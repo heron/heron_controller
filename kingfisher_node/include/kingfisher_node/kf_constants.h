@@ -15,6 +15,6 @@
 //Control Modes
 #define NO_CONTROL 0
 #define WRENCH_CONTROL 1
-#define YAWR_CONTROL 2
+#define YAW_RATE_CONTROL 2
 #define YAW_CONTROL 3
 #endif
