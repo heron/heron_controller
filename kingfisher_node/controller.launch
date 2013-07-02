@@ -16,7 +16,7 @@
 <param name="yaw/imin" value="-5.0"/>
 
 
-<node pkg="kingfisher_node" type="controller" name="controller" output="screen">
+<node pkg="kingfisher_node" type="controller" name="controller">
     <remap from="imu/data" to="imu/data_final"/>
 </node>
 

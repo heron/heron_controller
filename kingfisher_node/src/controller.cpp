@@ -171,7 +171,7 @@ void Controller::console_update(const ros::TimerEvent& event) {
          output+=": IMU data not received or being received too slow";
 
 
-     ROS_INFO("%s",output.c_str());
+     ROS_DEBUG("%s",output.c_str());
 }
 
 void Controller::control_update(const ros::TimerEvent& event) {
