@@ -7,6 +7,8 @@
 - git: {local-name: imu_um6, uri: 'https://github.com/clearpathrobotics/imu_um6.git'}
 - git: {local-name: nmea_gps_driver, uri: 'https://github.com/clearpathrobotics/nmea_gps_driver.git',
     version: fuerte-nmea-driver}
+- git: {local-name: navigation, uri: 'https://github.com/clearpathrobotics/navigation.git',
+    version: navigation-1.8}
 - git: {local-name: declination, uri: 'https://github.com/clearpathrobotics/declination.git'}
 - git: {local-name: nmea, uri: 'https://github.com/clearpathrobotics/nmea.git', version: fuerte-devel}
 - git: {local-name: enu, uri: 'https://bitbucket.org/clearpathrobotics/enu.git'}
