@@ -1,0 +1,25 @@
+<launch>
+
+<param name="yaw_rate/kf" value="50"/>
+<param name="yaw_rate/kp" value="40"/>
+<param name="yaw_rate/ki" value="30"/>
+<param name="yaw_rate/kd" value="30"/>
+<param name="yaw_rate/imax" value="50.0"/>
+<param name="yaw_rate/imin" value="-50.0"/>
+
+
+<param name="yaw/kf" value="5"/>
+<param name="yaw/kp" value="0.8"/>
+<param name="yaw/ki" value="0"/>
+<param name="yaw/kd" value="0.3"/>
+<param name="yaw/imax" value="5.0"/>
+<param name="yaw/imin" value="-5.0"/>
+
+
+<node pkg="kingfisher_node" type="controller" name="controller">
+    <remap from="imu/data" to="imu/data_final"/>
+</node>
+
+
+
+</launch>
