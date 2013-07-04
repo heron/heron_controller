@@ -35,7 +35,7 @@ fi
 ROSBAG_PID=$!
 
 echo "Starting motion commands."
-rostopic pub /cmd_drive kingfisher_msgs/Drive '{ left: 0.3, right: -0.5 }' -r 15 & > /dev/null
+rostopic pub /cmd_drive kingfisher_msgs/Drive '{ left: 0.5, right: -0.8 }' -r 15 & > /dev/null
 if [[ "$?" != "0" ]]; then
   kill $ROSBAG_PID
   echo "Unable to run rostopic pub. Are the kingfisher messages built and in the ROS_PACKAGE_PATH?"
