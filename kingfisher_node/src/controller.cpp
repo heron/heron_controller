@@ -1,5 +1,6 @@
 #include <kingfisher_node/controller.h>
 
+
 Controller::Controller(ros::NodeHandle &n):node_(n) {
     force_compensator_ = new ForceCompensator(node_);
 
@@ -77,6 +78,12 @@ double Controller::yr_compensator() {
 double Controller::y_compensator() {
     //calculate pid torque z
     double y_error = y_cmd_ - y_meas_;   
+    if (fabs(y_error) > PI){
+        if (y_cmd_ > PI) //presumably y_meas_ < PI
+            y_error =-( y_meas_ + (2*PI - y_cmd_));
+        else //y_cmd_ < pi, y_meas > pi
+            y_error =  y_cmd_ +  (2*PI - y_meas_);
+    }
 
     double y_comp_output = -y_pid_.updatePid(y_error, ros::Duration(1/20.0));
     geometry_msgs::Vector3 dbg_info;             
