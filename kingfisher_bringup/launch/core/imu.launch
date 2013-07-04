@@ -8,7 +8,7 @@
 
     <!-- Location of IMU relative to boat datum. This will be removed
          at some point in favour of a URDF model. -->
-    <node pkg="tf" type="static_transform_publisher" name="imu_broadcaster" args="0 -0.089 -0.494 -1.5708 0 0 base_link imu_link 100" />
+    <node pkg="tf" type="static_transform_publisher" name="imu_broadcaster" args="0 -0.089 -0.494 -1.5708 0 3.14 base_link imu_link 100" />
 
     <node pkg="declination" type="apply_to_imu" name="declination_imu" ns="imu" output="screen">
         <param name="default" value="-0.1693"  />
