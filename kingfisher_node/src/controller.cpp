@@ -77,6 +77,7 @@ double Controller::yr_compensator() {
 double Controller::y_compensator() {
     //calculate pid torque z
     double y_error = y_cmd_ - y_meas_;   
+
     double y_comp_output = -y_pid_.updatePid(y_error, ros::Duration(1/20.0));
     geometry_msgs::Vector3 dbg_info;             
     dbg_info.x = y_cmd_;
@@ -199,9 +200,9 @@ void Controller::control_update(const ros::TimerEvent& event) {
 
 double Controller::speed_control() {
     if (spd_cmd_ >= 0)
-        return (spd_cmd_*(max_fwd_force_/max_fwd_vel_));
+        return (spd_cmd_*((max_fwd_force_-10)/max_fwd_vel_));
     else
-        return (spd_cmd_*(max_bck_force_/max_bck_vel_));
+        return (spd_cmd_*((max_bck_force_-10)/max_bck_vel_));
 }
 
 
