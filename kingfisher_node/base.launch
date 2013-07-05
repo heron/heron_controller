@@ -4,6 +4,7 @@
   <arg name="port" default="/dev/arduino" />
   <node pkg="rosserial_python" type="serial_node.py" name="kingfisher_rosserial"
         args="$(arg port)" respawn="true" />
-  <node pkg="kingfisher_node" type="kingfisher.py" name="kingfisher" />
+
+  <include file="$(find kingfisher_node)/controller.launch"/>  
   <node pkg="kingfisher_node" type="wifi_monitor.py" name="wifi_monitor" respawn="true" />
 </launch>
