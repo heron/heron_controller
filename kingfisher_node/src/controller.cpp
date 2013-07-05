@@ -77,7 +77,12 @@ double Controller::yr_compensator() {
 
 double Controller::y_compensator() {
     //calculate pid torque z
+
+    if (y_meas_ < 0)
+        y_meas_ = y_meas_ + 2*PI;
+
     double y_error = y_cmd_ - y_meas_;   
+
     if (fabs(y_error) > PI){
         if (y_cmd_ > PI) //presumably y_meas_ < PI
             y_error =-( y_meas_ + (2*PI - y_cmd_));
@@ -122,7 +127,7 @@ void Controller::helm_callback(const kingfisher_msgs::Helm msg) {
     if (thrust_pct >= 0)
         force_output_.force.x = thrust_pct * (max_fwd_force_/1);
     else
-        force_output_.force.x = -thrust_pct * (max_bck_force_/1);
+        force_output_.force.x = thrust_pct * (max_bck_force_/1);
 
     //Save yaw rate command to be processed when feedback is available
     yr_cmd_ = msg.yaw_rate;
