@@ -15,6 +15,9 @@
 <param name="yaw/imax" value="5.0"/>
 <param name="yaw/imin" value="-5.0"/>
 
+<param name="max/fwd_vel" value="3"/>
+<param name="max/bck_vel" value="0.5"/>
+
 
 <node pkg="kingfisher_node" type="controller" name="controller">
     <remap from="imu/data" to="imu/data_final"/>
