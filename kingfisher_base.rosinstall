@@ -5,6 +5,7 @@
 - git:
     local-name: kingfisher
     uri: 'https://github.com/clearpathrobotics/kingfisher.git'
+    version: fuerte
 - git:
     local-name: kingfisher_apps
     uri: 'https://github.com/clearpathrobotics/kingfisher_apps.git'
