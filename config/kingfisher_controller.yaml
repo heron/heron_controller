@@ -1,0 +1,21 @@
+# Tuning for the Kingfisher PID controller.
+
+yaw_rate:
+  kf: 50
+  kp: 40
+  ki: 30
+  kd: 30
+  imax: 50.0
+  imin: -50.0
+
+yaw:
+  kf: 5
+  kp: 0.3
+  ki: 0
+  kd: 0.1
+  imax: 5.0
+  imin: -5.0
+
+max:
+  fwd_vel: 3.0
+  bck_vel: 0.5
