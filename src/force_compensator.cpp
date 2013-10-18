@@ -1,4 +1,4 @@
-#include <kingfisher_node/force_compensator.h>
+#include "kingfisher_controller/force_compensator.h"
 
 
 ForceCompensator::ForceCompensator(ros::NodeHandle &n): node_(n) {

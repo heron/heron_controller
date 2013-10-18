@@ -1,4 +1,4 @@
-#include <kingfisher_node/controller.h>
+#include "kingfisher_controller/controller.h"
 
 
 Controller::Controller(ros::NodeHandle &n):node_(n) {
@@ -108,9 +108,9 @@ void Controller::wrench_callback(const geometry_msgs::Wrench msg) {
 
 
 //Callback for yaw command which receives a yaw (rad) and speed (m/s) command 
-void Controller::yawspd_callback(const kingfisher_msgs::YawSpd msg) {
+void Controller::course_callback(const kingfisher_msgs::Course msg) {
     //Save Yaw Command to be processed when feedback is available
-    y_cmd_ = msg.heading;
+    y_cmd_ = msg.yaw;
     y_cmd_time_ = ros::Time::now().toSec();
 
     // Calculate speed command TODO: Can run in its own callback once speed feedback is available
@@ -123,11 +123,11 @@ void Controller::helm_callback(const kingfisher_msgs::Helm msg) {
     //Basic Helm Control
 
     //Calculate Thrust control
-    double thrust_pct = msg.thrust_pct;
-    if (thrust_pct >= 0)
-        force_output_.force.x = thrust_pct * (max_fwd_force_/1);
+    double thrust = msg.thrust;
+    if (thrust >= 0)
+        force_output_.force.x = thrust * (max_fwd_force_/1);
     else
-        force_output_.force.x = thrust_pct * (max_bck_force_/1);
+        force_output_.force.x = thrust * (max_bck_force_/1);
 
     //Save yaw rate command to be processed when feedback is available
     yr_cmd_ = msg.yaw_rate;
@@ -226,7 +226,7 @@ int main(int argc, char **argv)
     //ros::Subscriber vel_sub = nh.subscribe("cmd_vel",1,&Controller::twist_callback, &kf_control);
     ros::Subscriber wrench_sub = nh.subscribe("cmd_wrench",1, &Controller::wrench_callback, &kf_control);
     ros::Subscriber helm_sub = nh.subscribe("cmd_helm",1, &Controller::helm_callback,&kf_control);
-    ros::Subscriber heading_sub = nh.subscribe("cmd_yawspd",1, &Controller::yawspd_callback,&kf_control);
+    ros::Subscriber course_sub = nh.subscribe("cmd_course",1, &Controller::course_callback,&kf_control);
     ros::Subscriber imu_sub = nh.subscribe("imu/data",1, &Controller::imu_callback, &kf_control);
     ros::Timer control_output = nh.createTimer(ros::Duration(1/50.0), &Controller::control_update,&kf_control); 
     ros::Timer console_update = nh.createTimer(ros::Duration(1), &Controller::console_update, &kf_control);

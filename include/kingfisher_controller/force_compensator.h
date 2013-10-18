@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <kingfisher_msgs/Drive.h>
 #include <geometry_msgs/Wrench.h>
-#include <kingfisher_node/kf_constants.h>
+#include <kingfisher_controller/kf_constants.h>
 
 class ForceCompensator
 {

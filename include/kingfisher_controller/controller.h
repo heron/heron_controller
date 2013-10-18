@@ -8,10 +8,10 @@
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Wrench.h>
 #include <std_msgs/Float32.h>
-#include <kingfisher_node/kf_constants.h>
-#include <kingfisher_node/force_compensator.h>
+#include <kingfisher_controller/kf_constants.h>
+#include <kingfisher_controller/force_compensator.h>
 #include <kingfisher_msgs/Helm.h>
-#include <kingfisher_msgs/YawSpd.h>
+#include <kingfisher_msgs/Course.h>
 
 
 class Controller {
@@ -56,7 +56,7 @@ class Controller {
         double yr_compensator();
         double y_compensator();
         void wrench_callback(const geometry_msgs::Wrench msg);
-        void yawspd_callback(const kingfisher_msgs::YawSpd msg); 
+        void course_callback(const kingfisher_msgs::Course msg); 
         void helm_callback(const kingfisher_msgs::Helm msg); 
         void imu_callback(const sensor_msgs::Imu msg);
         void control_update(const ros::TimerEvent& event);
