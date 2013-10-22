@@ -1,4 +1,4 @@
 <launch>
   <rosparam command="load" file="/etc/ros/$(env ROS_DISTRO)/kingfisher_controller.yaml"/>
-  <node pkg="kingfisher_node" type="controller" name="controller" />
+  <node pkg="kingfisher_controller" type="controller" name="controller" />
 </launch>
