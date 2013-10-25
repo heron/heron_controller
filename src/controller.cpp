@@ -65,7 +65,7 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
 double Controller::yr_compensator() {
     //calculate pid torque z
     double yr_error = yr_cmd_ - yr_meas_;   
-    double yr_comp_output = -yr_pid_.updatePid(yr_error, ros::Duration(1/20.0));
+    double yr_comp_output = yr_pid_.updatePid(yr_error, ros::Duration(1/20.0));
     yr_comp_output = yr_comp_output + yr_kf_*yr_cmd_; //feedforward
     geometry_msgs::Vector3 dbg_info;             
     dbg_info.x = yr_cmd_;
@@ -90,7 +90,7 @@ double Controller::y_compensator() {
             y_error =  y_cmd_ +  (2*PI - y_meas_);
     }
 
-    double y_comp_output = -y_pid_.updatePid(y_error, ros::Duration(1/20.0));
+    double y_comp_output = y_pid_.updatePid(y_error, ros::Duration(1/20.0));
     geometry_msgs::Vector3 dbg_info;             
     dbg_info.x = y_cmd_;
     dbg_info.y = y_meas_;
