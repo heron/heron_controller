@@ -2,6 +2,11 @@
 Changelog for package kingfisher_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.4 (2014-03-05)
+------------------
+* add include folder into catkin_package command
+* Contributors: y22ma
+
 0.0.3 (2013-10-24)
 ------------------
 * Negate control outputs as a stopgap until kingfisher_controller correctly accounts for the base_link -> imu_link tf.
