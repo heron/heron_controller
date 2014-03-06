@@ -2,10 +2,15 @@
 Changelog for package kingfisher_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.0.5 (2014-03-05)
+------------------
+* add installation rule for header
+* Contributors: Yan Ma 
+
 0.0.4 (2014-03-05)
 ------------------
 * add include folder into catkin_package command
-* Contributors: y22ma
+* Contributors: Yan Ma
 
 0.0.3 (2013-10-24)
 ------------------
