@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('kingfisher_node')
+import roslib; roslib.load_manifest('heron_node')
 import rospy
 
-from kingfisher_msgs.msg import Drive
+from heron_msgs.msg import Drive
 
 steps = [ 0, 0.2, 0.4, 0.6, 0.8, 1.0, 0.0 ]
 step_length = 150
 
 
-class KingfisherTrial(object):
+class HeronTrial(object):
     def __init__(self):
-        rospy.init_node('kingfisher_trial')
+        rospy.init_node('heron_trial')
         self.pub = rospy.Publisher('cmd_drive', Drive)
 
     def spin(self):
@@ -29,4 +29,4 @@ class KingfisherTrial(object):
             r.sleep()
 
 if __name__ == "__main__":
-  KingfisherTrial().spin()
+  HeronTrial().spin()

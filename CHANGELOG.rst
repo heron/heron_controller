@@ -1,11 +1,11 @@
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Changelog for package kingfisher_controller
+Changelog for package heron_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 0.0.5 (2014-03-05)
 ------------------
 * add installation rule for header
-* Contributors: Yan Ma 
+* Contributors: Yan Ma
 
 0.0.4 (2014-03-05)
 ------------------

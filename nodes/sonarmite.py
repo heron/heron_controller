@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('kingfisher_node')
+import roslib; roslib.load_manifest('heron_node')
 import rospy
 
 from sensor_msgs.msg import Range

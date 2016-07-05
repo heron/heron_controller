@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('kingfisher_node')
+import roslib; roslib.load_manifest('heron_node')
 import rospy
 
-from kingfisher_node.twist_subscriber import TwistSubscriber
+from heron_node.twist_subscriber import TwistSubscriber
 
-class Kingfisher(object):
+class Heron(object):
     def __init__(self):
         rospy.init_node('chameleon_twist')
 	TwistSubscriber()
@@ -14,4 +14,4 @@ class Kingfisher(object):
         rospy.spin()
 
 if __name__ == "__main__":
-  Kingfisher().spin()
+  Heron().spin()

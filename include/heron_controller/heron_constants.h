@@ -1,6 +1,6 @@
 
 
-#ifndef KF_CONSTANTS_H
+#ifndef HERON_CONSTANTS_H
 
 //TODO: Change defines to static const and enums
 //Boat Constants

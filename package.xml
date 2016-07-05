@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package>
-  <name>kingfisher_controller</name>
+  <name>heron_controller</name>
   <version>0.0.5</version>
-  <description>The kingfisher_controller package</description>
+  <description>The heron_controller package</description>
 
   <maintainer email="mpurvis@clearpathrobotics.com">Mike Purvis</maintainer>
 
@@ -12,11 +12,11 @@
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>control_toolbox</build_depend>
-  <build_depend>kingfisher_msgs</build_depend>
+  <build_depend>heron_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>tf</build_depend>
   <run_depend>control_toolbox</run_depend>
-  <run_depend>kingfisher_msgs</run_depend>
+  <run_depend>heron_msgs</run_depend>
   <run_depend>sensor_msgs</run_depend>
   <run_depend>tf</run_depend>
 

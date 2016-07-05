@@ -1,7 +1,7 @@
 #include <ros/ros.h>
-#include <kingfisher_msgs/Drive.h>
+#include <heron_msgs/Drive.h>
 #include <geometry_msgs/Wrench.h>
-#include <kingfisher_controller/kf_constants.h>
+#include <heron_controller/heron_constants.h>
 
 class ForceCompensator
 {
@@ -20,4 +20,3 @@ class ForceCompensator
         void pub_effective_wrench(double left_thrust,double right_thrust);
 
 };
-

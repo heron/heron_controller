@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import roslib; roslib.load_manifest('kingfisher_bringup')
+import roslib; roslib.load_manifest('heron_bringup')
 
 import rospy
 from std_msgs.msg import Bool

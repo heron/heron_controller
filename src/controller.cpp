@@ -1,4 +1,4 @@
-#include "kingfisher_controller/controller.h"
+#include "heron_controller/controller.h"
 
 
 Controller::Controller(ros::NodeHandle &n):node_(n) {
@@ -108,7 +108,7 @@ void Controller::wrench_callback(const geometry_msgs::Wrench msg) {
 
 
 //Callback for yaw command which receives a yaw (rad) and speed (m/s) command 
-void Controller::course_callback(const kingfisher_msgs::Course msg) {
+void Controller::course_callback(const heron_msgs::Course msg) {
     //Save Yaw Command to be processed when feedback is available
     y_cmd_ = msg.yaw;
     y_cmd_time_ = ros::Time::now().toSec();
@@ -119,7 +119,7 @@ void Controller::course_callback(const kingfisher_msgs::Course msg) {
 }            
 
 //Callback for helm commands which receives a thrust percentage (0..1) and a yaw rate (rad/s)
-void Controller::helm_callback(const kingfisher_msgs::Helm msg) { 
+void Controller::helm_callback(const heron_msgs::Helm msg) { 
     //Basic Helm Control
 
     //Calculate Thrust control

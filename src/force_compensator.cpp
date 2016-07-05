@@ -1,8 +1,8 @@
-#include "kingfisher_controller/force_compensator.h"
+#include "heron_controller/force_compensator.h"
 
 
 ForceCompensator::ForceCompensator(ros::NodeHandle &n): node_(n) {
-            cmd_pub_ = node_.advertise<kingfisher_msgs::Drive>("cmd_drive",1000);
+            cmd_pub_ = node_.advertise<heron_msgs::Drive>("cmd_drive",1000);
             eff_pub_ = node_.advertise<geometry_msgs::Wrench>("eff_wrench",1000);
 }
 
@@ -28,7 +28,7 @@ double ForceCompensator::saturate_thrusters (double thrust) {
 
 //Take in wrench command and output cmd_drive messages to achieve the given wrench command
 void ForceCompensator::pub_thrust_cmd (geometry_msgs::Wrench output) {
-    kingfisher_msgs::Drive cmd_output;
+    heron_msgs::Drive cmd_output;
     double fx = output.force.x;
     double tauz = output.torque.z;
 

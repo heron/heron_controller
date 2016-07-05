@@ -1,4 +1,4 @@
-# Tuning for the Kingfisher PID controller.
+# Tuning for the Heron PID controller.
 
 yaw_rate:
   kf: 50
