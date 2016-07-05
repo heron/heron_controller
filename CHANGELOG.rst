@@ -2,6 +2,12 @@
 Changelog for package heron_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Switched from updatePid to computeCommand as it is deprecated control_toolbox.
+* Heron rename.
+* Contributors: Tony Baltovski
+
 0.0.5 (2014-03-05)
 ------------------
 * add installation rule for header
