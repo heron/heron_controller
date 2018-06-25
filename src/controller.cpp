@@ -7,59 +7,100 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
     //Assume no messages are being received. Don't send out anything new until commands are received
     control_mode = NO_CONTROL;
 
-    node_.param<double>("imu_data_timeout", imu_data_timeout_,1/5.0); //if sensor feedback has not been recevied in this much amount of time, stop all autonomous behavior
+    ros::NodeHandle prv_node_("~");
+
+    //Timeouts for sensors
+    //if no data has been received in a while, disable certain PID controls
+    prv_node_.param<double>("vel_data_timeout", vel_data_timeout_, 1/5.0);
+    vel_data_time_ = 0;
+    vel_timeout_ = true;
+
+    prv_node_.param<double>("imu_data_timeout", imu_data_timeout_,1/5.0); //if sensor feedback has not been recevied in this much amount of time, stop all autonomous behavior
     imu_data_time_ = 0;
     imu_timeout_ = true;
 
-    //Setup Wrench Control
-    node_.param<double>("wrench_cmd/timeout",wrench_cmd_timeout_,0.5);//If the commands dont show up in this much time don't send out drive commans
+    //Timeouts for control formats
+    //if no command has been received in a while, stop sending drive commands
+    prv_node_.param<double>("course_cmd/timeout",course_cmd_timeout_,0.5);
+    course_cmd_time_ = 0;
+
+    prv_node_.param<double>("helm_cmd/timeout", helm_cmd_timeout_,0.5);
+    helm_cmd_time_ = 0;
+
+    prv_node_.param<double>("wrench_cmd/timeout",wrench_cmd_timeout_,0.5);
     wrench_cmd_time_ = 0;
+
+    prv_node_.param<double>("twist_cmd/timeout",twist_cmd_timeout_,0.5);//If the commands dont show up in this much time don't send out drive commands
+    twist_cmd_time_ = 0;
+
+    //Setup Fwd Vel Controller
+    fvel_dbg_pub_ = node_.advertise<geometry_msgs::Vector3>("fwd_vel_debug",1000);
+    prv_node_.param<double>("fwd_vel/kf", fvel_kf_,10); //Feedforward Gain
+    prv_node_.param<double>("fwd_vel/kp", fvel_kp_,90.0);  //Proportional Gain
+    prv_node_.param<double>("fwd_vel/kd", fvel_kd_,1.0); //Derivative Gain
+    prv_node_.param<double>("fwd_vel/ki", fvel_ki_,0.0); //Integral Gain
+    prv_node_.param<double>("fwd_vel/imax", fvel_imax_,0.0); //Clamp Integral Outputs
+    prv_node_.param<double>("fwd_vel/imin", fvel_imin_,0.0);
+    fvel_meas_ = 0;
 
     //Setup Yaw Rate Controller
     yr_dbg_pub_ = node_.advertise<geometry_msgs::Vector3>("yaw_rate_debug",1000);
-    node_.param<double>("yaw_rate/kf", yr_kf_,10); //Feedforward Gain
-    node_.param<double>("yaw_rate/kp", yr_kp_,2.0);  //Proportional Gain
-    node_.param<double>("yaw_rate/kd", yr_kd_,1.0); //Derivative Gain
-    node_.param<double>("yaw_rate/ki", yr_ki_,0.0); //Integral Gain
-    node_.param<double>("yaw_rate/imax", yr_imax_,0.0); //Clamp Integral Outputs
-    node_.param<double>("yaw_rate/imin", yr_imin_,0.0);
-    node_.param<double>("yaw_rate/cmd_timeout", yr_cmd_timeout_,0.5);
+    prv_node_.param<double>("yaw_rate/kf", yr_kf_,10); //Feedforward Gain
+    prv_node_.param<double>("yaw_rate/kp", yr_kp_,2.0);  //Proportional Gain
+    prv_node_.param<double>("yaw_rate/kd", yr_kd_,1.0); //Derivative Gain
+    prv_node_.param<double>("yaw_rate/ki", yr_ki_,0.0); //Integral Gain
+    prv_node_.param<double>("yaw_rate/imax", yr_imax_,0.0); //Clamp Integral Outputs
+    prv_node_.param<double>("yaw_rate/imin", yr_imin_,0.0);
     yr_meas_ = 0;
 
     //Setup Yaw Controller
     y_dbg_pub_ = node_.advertise<geometry_msgs::Vector3>("yaw_debug",1000);
 
-    node_.param<double>("yaw/kp", y_kf_,5.0);
-    node_.param<double>("yaw/kp", y_kp_,5.0);
-    node_.param<double>("yaw/kd", y_kd_,1.0);
-    node_.param<double>("yaw/ki", y_ki_,0.5);
-    node_.param<double>("yaw/imax", y_imax_,0.0); //clamp integral output at max yaw yorque
-    node_.param<double>("yaw/imin", y_imin_,0.0);
-    node_.param<double>("yaw/cmd_timeout",y_cmd_timeout_,0.5);
+    prv_node_.param<double>("yaw/kp", y_kf_,5.0);
+    prv_node_.param<double>("yaw/kp", y_kp_,5.0);
+    prv_node_.param<double>("yaw/kd", y_kd_,1.0);
+    prv_node_.param<double>("yaw/ki", y_ki_,0.5);
+    prv_node_.param<double>("yaw/imax", y_imax_,0.0); //clamp integral output at max yaw yorque
+    prv_node_.param<double>("yaw/imin", y_imin_,0.0);
     y_meas_ = 0;
 
-    ROS_DEBUG("Yaw Rate Params (F,P,I,D,Max,Min):%f,%f,%f,%f,%f,%f",yr_kf_,yr_kp_, yr_ki_,yr_kd_,yr_imax_,yr_imin_);
-    ROS_DEBUG("Yaw Params (F,P,I,D,Max,Min):%f,%f,%f,%f,%f,%f",y_kf_,y_kp_, y_ki_,y_kd_,y_imax_,y_imin_);
+    ROS_DEBUG("Fwd Vel Params (F,P,I,D,iMax,iMin):%f,%f,%f,%f,%f,%f",fvel_kf_,fvel_kp_, fvel_ki_,fvel_kd_,fvel_imax_,fvel_imin_);
+    ROS_DEBUG("Yaw Rate Params (F,P,I,D,iMax,iMin):%f,%f,%f,%f,%f,%f",yr_kf_,yr_kp_, yr_ki_,yr_kd_,yr_imax_,yr_imin_);
+    ROS_DEBUG("Yaw Params (F,P,I,D,iMax,iMin):%f,%f,%f,%f,%f,%f",y_kf_,y_kp_, y_ki_,y_kd_,y_imax_,y_imin_);
+
+
+    fvel_pid_.reset();
+    fvel_pid_.initPid(fvel_kp_,fvel_ki_,fvel_kd_,fvel_imax_,fvel_imin_);
+    fvel_cmd_ = 0;
 
     yr_pid_.reset();
     yr_pid_.initPid(yr_kp_,yr_ki_,yr_kd_,yr_imax_,yr_imin_);
     yr_cmd_ = 0;
-    yr_cmd_time_ = 0;
-    last_yr_cmd_time_ = 0;
 
     //Setup Yaw Controller
     y_pid_.reset();
     y_pid_.initPid(y_kp_,y_ki_,y_kd_,y_imax_,y_imin_);
     y_cmd_ = 0;
-    y_cmd_time_ = 0;
-    last_y_cmd_time_ = 0;
 
-    //Setup Speed Control (linear mapping)
-    spd_cmd_ = 0;
     node_.param<double>("max/fwd_vel", max_fwd_vel_,MAX_FWD_VEL);
     node_.param<double>("max/fwd_force", max_fwd_force_,2*MAX_FWD_THRUST); //2 thrusters
     node_.param<double>("max/bck_vel",max_bck_vel_,MAX_BCK_VEL);
     node_.param<double>("max/bck_force",max_bck_force_,2*MAX_BCK_THRUST);
+}
+
+double Controller::fvel_compensator() {
+  //calculate pid force X
+  double fvel_error = fvel_cmd_ - fvel_meas_;
+  double fvel_comp_output = fvel_pid_.computeCommand(fvel_error, ros::Duration(1/20.0));
+  fvel_comp_output = fvel_comp_output + fvel_kf_*fvel_cmd_;
+
+  geometry_msgs::Vector3 dbg_info;
+  dbg_info.x = fvel_cmd_;
+  dbg_info.y = fvel_meas_;
+  dbg_info.z = fvel_comp_output;
+  fvel_dbg_pub_.publish(dbg_info);
+
+  return fvel_comp_output;
 }
 
 double Controller::yr_compensator() {
@@ -67,11 +108,13 @@ double Controller::yr_compensator() {
     double yr_error = yr_cmd_ - yr_meas_;
     double yr_comp_output = yr_pid_.computeCommand(yr_error, ros::Duration(1/20.0));
     yr_comp_output = yr_comp_output + yr_kf_*yr_cmd_; //feedforward
+
     geometry_msgs::Vector3 dbg_info;
     dbg_info.x = yr_cmd_;
     dbg_info.y = yr_meas_;
     dbg_info.z = yr_comp_output;
     yr_dbg_pub_.publish(dbg_info);
+
     return yr_comp_output;
 }
 
@@ -91,13 +134,40 @@ double Controller::y_compensator() {
     }
 
     double y_comp_output = y_pid_.computeCommand(y_error, ros::Duration(1/20.0));
+
     geometry_msgs::Vector3 dbg_info;
     dbg_info.x = y_cmd_;
     dbg_info.y = y_meas_;
     dbg_info.z = y_comp_output;
     y_dbg_pub_.publish(dbg_info);
+
     return y_comp_output;
 }
+
+void Controller::update_fwd_vel_control() {
+  force_output_.force.x = fvel_compensator();
+}
+
+void Controller::update_yaw_rate_control() {
+  force_output_.torque.z = yr_compensator();
+}
+
+void Controller::update_yaw_control() {
+  yr_cmd_ = y_compensator();
+  force_output_.torque.z = yr_compensator();
+}
+
+//Callback to receive twist msgs (cmd_vel style)
+void Controller::twist_callback(const geometry_msgs::Twist msg) {
+  yr_cmd_ = msg.angular.z;
+  update_yaw_rate_control();
+
+  fvel_cmd_ = msg.linear.x;
+  update_fwd_vel_control();
+
+  twist_cmd_time_ = ros::Time::now().toSec();
+}//twist_callback
+
 
 //Callback to receive raw wrench commands (force along x axis and torque about z axis).
 void Controller::wrench_callback(const geometry_msgs::Wrench msg) {
@@ -106,16 +176,17 @@ void Controller::wrench_callback(const geometry_msgs::Wrench msg) {
     wrench_cmd_time_ = ros::Time::now().toSec();
 }
 
-
 //Callback for yaw command which receives a yaw (rad) and speed (m/s) command
 void Controller::course_callback(const heron_msgs::Course msg) {
-    //Save Yaw Command to be processed when feedback is available
+    //Save Yaw Command and process it
     y_cmd_ = msg.yaw;
-    y_cmd_time_ = ros::Time::now().toSec();
+    update_yaw_control();
 
-    // Calculate speed command TODO: Can run in its own callback once speed feedback is available
-    spd_cmd_ = msg.speed;
-    force_output_.force.x = speed_control();
+    // Calculate speed command
+    fvel_cmd_ = msg.speed;
+    update_fwd_vel_control();
+
+    course_cmd_time_ = ros::Time::now().toSec();
 }
 
 //Callback for helm commands which receives a thrust percentage (0..1) and a yaw rate (rad/s)
@@ -131,7 +202,9 @@ void Controller::helm_callback(const heron_msgs::Helm msg) {
 
     //Save yaw rate command to be processed when feedback is available
     yr_cmd_ = msg.yaw_rate;
-    yr_cmd_time_ = ros::Time::now().toSec();
+    update_yaw_rate_control();
+
+    helm_cmd_time_ = ros::Time::now().toSec();
 
 }
 
@@ -145,18 +218,21 @@ void Controller::imu_callback(const sensor_msgs::Imu msg) {
     //run compensator at the same time as imu data received
     switch (control_mode)
     {
-        case YAW_CONTROL:
-            yr_cmd_ = y_compensator();
-            force_output_.torque.z = yr_compensator();
+        case COURSE_CONTROL:
+            update_yaw_control();
             break;
-        case YAW_RATE_CONTROL:
-            force_output_.torque.z  = yr_compensator();
+        case HELM_CONTROL:
+            update_yaw_rate_control();
             break;
         case WRENCH_CONTROL:
+            break;
+        case TWIST_CONTROL:
+            update_yaw_rate_control();
+            break;
         case NO_CONTROL:
         default:
             break;
-     }
+     }//switch
 }
 
 void Controller::console_update(const ros::TimerEvent& event) {
@@ -164,15 +240,17 @@ void Controller::console_update(const ros::TimerEvent& event) {
     std::string output="";
     switch (control_mode)
     {
-        case YAW_CONTROL:
+        case COURSE_CONTROL:
             output = "Boat controlling yaw position";
             break;
-        case YAW_RATE_CONTROL:
+        case HELM_CONTROL:
             output = "Boat Controlling yaw rate";
             break;
         case WRENCH_CONTROL:
             output = "Boat in raw wrench/RC control";
             break;
+        case TWIST_CONTROL:
+            output = "Boat controlling forward and yaw velocity";
         case NO_CONTROL:
             output = "No commands being processed";
             break;
@@ -181,53 +259,81 @@ void Controller::console_update(const ros::TimerEvent& event) {
      }
 
      if (imu_timeout_)
-         output+=": IMU data not received or being received too slow";
+        output+=": IMU data not received or being received too slowly";
 
+     if (vel_timeout_)
+         output+=": Forward velocity data not received or being received too slowly";
 
      ROS_INFO("%s",output.c_str());
 }
 
 void Controller::control_update(const ros::TimerEvent& event) {
 
-    if (ros::Time::now().toSec() - imu_data_time_ > imu_data_timeout_)
+    if (ros::Time::now().toSec() - imu_data_time_ > imu_data_timeout_) {
         imu_timeout_ = true;
-    else
+    } else {
         imu_timeout_ = false;
+    }//else
 
-    if (ros::Time::now().toSec() - y_cmd_time_ < y_cmd_timeout_ and !imu_timeout_) //prioritize yaw command, make sure imu data is fresh
-        control_mode=YAW_CONTROL;
-    else if(ros::Time::now().toSec() - yr_cmd_time_ < yr_cmd_timeout_ and !imu_timeout_)
-        control_mode=YAW_RATE_CONTROL;
-    else if(ros::Time::now().toSec() - wrench_cmd_time_ < wrench_cmd_timeout_)
+    if (ros::Time::now().toSec() - vel_data_time_ > vel_data_timeout_) {
+        vel_timeout_ = true;
+    } else {
+        vel_timeout_ = false;
+    }//else
+
+    if (ros::Time::now().toSec() - course_cmd_time_ < course_cmd_timeout_ && !vel_timeout_ && !imu_timeout_) { //prioritize yaw command, make sure imu data is fresh
+        control_mode=COURSE_CONTROL;
+    } else if(ros::Time::now().toSec() - helm_cmd_time_ < helm_cmd_timeout_ and !imu_timeout_) {
+        control_mode=HELM_CONTROL;
+    } else if (ros::Time::now().toSec() - twist_cmd_time_ < twist_cmd_timeout_ && !imu_timeout_ && !vel_timeout_) {
+        control_mode=TWIST_CONTROL;
+    } else if(ros::Time::now().toSec() - wrench_cmd_time_ < wrench_cmd_timeout_) {
         control_mode=WRENCH_CONTROL;
-    else {
+    } else {
         control_mode=NO_CONTROL;
         force_output_.torque.z = 0;
-        force_output_.force.z = 0;
-        return;
-    }
+        force_output_.force.x = 0;
+    }//else
 
     force_compensator_->pub_thrust_cmd(force_output_);
 }
 
-double Controller::speed_control() {
-    if (spd_cmd_ >= 0)
-        return (spd_cmd_*((max_fwd_force_-10)/max_fwd_vel_));
-    else
-        return (spd_cmd_*((max_bck_force_-10)/max_bck_vel_));
-}
+//currently using navsat/vel topic for velocity
+void Controller::vel_callback(const geometry_msgs::Vector3Stamped msg) {
 
+    vel_data_time_ = ros::Time::now().toSec();
+    fvel_meas_ = msg.vector.x * std::cos(y_meas_) + msg.vector.y * std::sin(y_meas_);
+
+    switch (control_mode) {
+        case COURSE_CONTROL:
+          update_fwd_vel_control();
+          break;
+        case HELM_CONTROL:
+          break;
+        case WRENCH_CONTROL:
+          break;
+        case TWIST_CONTROL:
+          update_fwd_vel_control();
+          break;
+        case NO_CONTROL:
+          break;
+    }//switch
+}//vel_callback
 
 int main(int argc, char **argv)
 {
     ros::init(argc,argv, "controller");
     ros::NodeHandle nh;
     Controller kf_control(nh);
-    //ros::Subscriber vel_sub = nh.subscribe("cmd_vel",1,&Controller::twist_callback, &kf_control);
+
+    ros::Subscriber twist_sub = nh.subscribe("cmd_vel",1,&Controller::twist_callback, &kf_control);
     ros::Subscriber wrench_sub = nh.subscribe("cmd_wrench",1, &Controller::wrench_callback, &kf_control);
     ros::Subscriber helm_sub = nh.subscribe("cmd_helm",1, &Controller::helm_callback,&kf_control);
     ros::Subscriber course_sub = nh.subscribe("cmd_course",1, &Controller::course_callback,&kf_control);
+
     ros::Subscriber imu_sub = nh.subscribe("imu/data",1, &Controller::imu_callback, &kf_control);
+    ros::Subscriber vel_sub = nh.subscribe("navsat/vel",1, &Controller::vel_callback, &kf_control);
+
     ros::Timer control_output = nh.createTimer(ros::Duration(1/50.0), &Controller::control_update,&kf_control);
     ros::Timer console_update = nh.createTimer(ros::Duration(1), &Controller::console_update, &kf_control);
 

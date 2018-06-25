@@ -24,28 +24,41 @@ class Controller {
         double imu_data_time_, imu_data_timeout_;
         bool imu_timeout_;
 
-        //Wrench output (raw forces)
-        double wrench_cmd_time_,wrench_cmd_timeout_;
+        //Vel Feedback timeout
+        double vel_data_time_, vel_data_timeout_;
+        bool vel_timeout_;
+
+        //Vars to hold time since last cmd
+        double course_cmd_time_;
+        double course_cmd_timeout_;
+        double helm_cmd_time_;
+        double helm_cmd_timeout_;
+        double wrench_cmd_time_;
+        double wrench_cmd_timeout_;
+        double twist_cmd_time_;
+        double twist_cmd_timeout_;
+
+        control_toolbox::Pid fvel_pid_;
+        ros::Publisher fvel_dbg_pub_;
+        double fvel_kf_,fvel_kp_, fvel_ki_, fvel_kd_,fvel_imax_,fvel_imin_;
+        double fvel_cmd_,fvel_meas_;
 
         //Yaw Rate Controller Details
         control_toolbox::Pid yr_pid_;
         ros::Publisher yr_dbg_pub_;
         double yr_kf_,yr_kp_, yr_ki_, yr_kd_,yr_imax_,yr_imin_;
-        double yr_cmd_,yr_cmd_time_,last_yr_cmd_time_,yr_cmd_timeout_;
-        double yr_meas_;
+        double yr_cmd_,yr_meas_;
 
         //Yaw Control Details
         control_toolbox::Pid y_pid_;
         ros::Publisher y_dbg_pub_;
         double y_kf_,y_kp_, y_ki_, y_kd_,y_imax_,y_imin_;
-        double y_cmd_,y_cmd_time_,last_y_cmd_time_,y_cmd_timeout_;
-        double y_meas_;
+        double y_cmd_,y_meas_;
 
         //Speed Control details
-        double spd_cmd_;
         double max_fwd_vel_,max_fwd_force_,max_bck_vel_,max_bck_force_;
 
-        int control_mode; //Helm, Heading or Raw Wrench
+        int control_mode; //Helm, Course, Twist, or Raw Wrench
 
     public:
         Controller(ros::NodeHandle &n);
@@ -53,13 +66,22 @@ class Controller {
             delete force_compensator_;
         }
 
+        double fvel_compensator();
         double yr_compensator();
         double y_compensator();
+
+        void update_fwd_vel_control();
+        void update_yaw_rate_control();
+        void update_yaw_control();
+
         void wrench_callback(const geometry_msgs::Wrench msg);
         void course_callback(const heron_msgs::Course msg);
         void helm_callback(const heron_msgs::Helm msg);
+        void twist_callback(const geometry_msgs::Twist msg);
+
         void imu_callback(const sensor_msgs::Imu msg);
+        void vel_callback(const geometry_msgs::Vector3Stamped msg);
+
         void control_update(const ros::TimerEvent& event);
         void console_update(const ros::TimerEvent& event);
-        double speed_control();
 };
