@@ -22,11 +22,11 @@ class Controller {
         geometry_msgs::Wrench force_output_;
 
         //GPS Velocity Feedback timeout
-        double vel_data_time_, vel_data_timeout_;
+        double vel_data_time_, vel_data_timeout_, vel_cov_limit_;
         bool vel_timeout_;
 
         //IMU Feedback timeout
-        double imu_data_time_, imu_data_timeout_;
+        double imu_data_time_, imu_data_timeout_, imu_cov_limit_;
         bool imu_timeout_;
 
         //Vars to hold time since last cmd

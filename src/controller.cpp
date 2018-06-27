@@ -81,10 +81,13 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
     y_pid_.initPid(y_kp_,y_ki_,y_kd_,y_imax_,y_imin_);
     y_cmd_ = 0;
 
-    node_.param<double>("max/fwd_vel", max_fwd_vel_,MAX_FWD_VEL);
-    node_.param<double>("max/fwd_force", max_fwd_force_,2*MAX_FWD_THRUST); //2 thrusters
-    node_.param<double>("max/bck_vel",max_bck_vel_,MAX_BCK_VEL);
-    node_.param<double>("max/bck_force",max_bck_force_,2*MAX_BCK_THRUST);
+    prv_node_.param<double>("max/fwd_vel", max_fwd_vel_,MAX_FWD_VEL);
+    prv_node_.param<double>("max/fwd_force", max_fwd_force_,2*MAX_FWD_THRUST); //2 thrusters
+    prv_node_.param<double>("max/bck_vel",max_bck_vel_,MAX_BCK_VEL);
+    prv_node_.param<double>("max/bck_force",max_bck_force_,2*MAX_BCK_THRUST);
+
+    prv_node_.param<double>("cov_limits/velocity", vel_cov_limit_, 0.28);
+    prv_node_.param<double>("cov_limits/imu", imu_cov_limit_, 1.0);
 }
 
 double Controller::fvel_compensator() {
@@ -223,12 +226,12 @@ void Controller::helm_callback(const heron_msgs::Helm msg) {
 void Controller::odom_callback(const nav_msgs::Odometry msg) {
 
     //check if navsat/vel is being integrated into odometry
-    if (msg.twist.covariance[0] < 0.01 && msg.twist.covariance[6] < 0.01) {
+    if (msg.twist.covariance[0] < vel_cov_limit_ && msg.twist.covariance[6] < vel_cov_limit_) {
       vel_data_time_ = ros::Time::now().toSec();
     }//if
 
     //check if imu/data is being integrated into odometry
-    if (msg.pose.covariance[35] < 1 && msg.twist.covariance[35] < 1) {
+    if (msg.pose.covariance[35] < imu_cov_limit_ && msg.twist.covariance[35] < imu_cov_limit_) {
       imu_data_time_ = ros::Time::now().toSec();
     }//if
 
