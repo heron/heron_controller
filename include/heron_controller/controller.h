@@ -5,6 +5,7 @@
 #include <string.h>
 #include <tf/tf.h>
 #include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Wrench.h>
 #include <std_msgs/Float32.h>
@@ -20,13 +21,13 @@ class Controller {
         ForceCompensator *force_compensator_;
         geometry_msgs::Wrench force_output_;
 
+        //GPS Velocity Feedback timeout
+        double vel_data_time_, vel_data_timeout_;
+        bool vel_timeout_;
+
         //IMU Feedback timeout
         double imu_data_time_, imu_data_timeout_;
         bool imu_timeout_;
-
-        //Vel Feedback timeout
-        double vel_data_time_, vel_data_timeout_;
-        bool vel_timeout_;
 
         //Vars to hold time since last cmd
         double course_cmd_time_;
@@ -70,6 +71,7 @@ class Controller {
         double yr_compensator();
         double y_compensator();
 
+        void fwd_vel_mapping();
         void update_fwd_vel_control();
         void update_yaw_rate_control();
         void update_yaw_control();
@@ -79,8 +81,7 @@ class Controller {
         void helm_callback(const heron_msgs::Helm msg);
         void twist_callback(const geometry_msgs::Twist msg);
 
-        void imu_callback(const sensor_msgs::Imu msg);
-        void vel_callback(const geometry_msgs::Vector3Stamped msg);
+        void odom_callback(const nav_msgs::Odometry msg);
 
         void control_update(const ros::TimerEvent& event);
         void console_update(const ros::TimerEvent& event);

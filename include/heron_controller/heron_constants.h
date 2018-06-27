@@ -18,6 +18,7 @@
 #define HELM_CONTROL 2
 #define COURSE_CONTROL 3
 #define TWIST_CONTROL 4
+#define TWIST_LIN_CONTROL 5
 
 #define PI 3.14159
 

@@ -1,6 +1,5 @@
 #include "heron_controller/controller.h"
 
-
 Controller::Controller(ros::NodeHandle &n):node_(n) {
     force_compensator_ = new ForceCompensator(node_);
 
@@ -11,13 +10,13 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
 
     //Timeouts for sensors
     //if no data has been received in a while, disable certain PID controls
+    prv_node_.param<double>("imu_data_timeout", imu_data_timeout_, 1/5.0);
+    imu_data_time_ = 0;
+    imu_timeout_ = true;
+
     prv_node_.param<double>("vel_data_timeout", vel_data_timeout_, 1/5.0);
     vel_data_time_ = 0;
     vel_timeout_ = true;
-
-    prv_node_.param<double>("imu_data_timeout", imu_data_timeout_,1/5.0); //if sensor feedback has not been recevied in this much amount of time, stop all autonomous behavior
-    imu_data_time_ = 0;
-    imu_timeout_ = true;
 
     //Timeouts for control formats
     //if no command has been received in a while, stop sending drive commands
@@ -144,6 +143,14 @@ double Controller::y_compensator() {
     return y_comp_output;
 }
 
+void Controller::fwd_vel_mapping() {
+  if (fvel_cmd_ < 0) {
+    force_output_.force.x = 2 * max_fwd_force_ * fvel_cmd_ / max_fwd_vel_; //two thrusters
+  } else {
+      force_output_.force.x = 2 * max_bck_force_ * fvel_cmd_ / max_bck_vel_; //two thrusters
+  }//else
+}//fwd_vel_mapping
+
 void Controller::update_fwd_vel_control() {
   force_output_.force.x = fvel_compensator();
 }
@@ -163,7 +170,12 @@ void Controller::twist_callback(const geometry_msgs::Twist msg) {
   update_yaw_rate_control();
 
   fvel_cmd_ = msg.linear.x;
-  update_fwd_vel_control();
+
+  if (control_mode == TWIST_LIN_CONTROL) {
+    fwd_vel_mapping();
+  } else {
+    update_fwd_vel_control();
+  }
 
   twist_cmd_time_ = ros::Time::now().toSec();
 }//twist_callback
@@ -205,35 +217,47 @@ void Controller::helm_callback(const heron_msgs::Helm msg) {
     update_yaw_rate_control();
 
     helm_cmd_time_ = ros::Time::now().toSec();
-
 }
 
-//Callback for imu data (assuming ENU frame)
-void Controller::imu_callback(const sensor_msgs::Imu msg) {
+//ENU
+void Controller::odom_callback(const nav_msgs::Odometry msg) {
 
-    imu_data_time_ = ros::Time::now().toSec();
-    yr_meas_ = msg.angular_velocity.z;
-    y_meas_ = tf::getYaw(msg.orientation);
+    //check if navsat/vel is being integrated into odometry
+    if (msg.twist.covariance[0] < 0.01 && msg.twist.covariance[6] < 0.01) {
+      vel_data_time_ = ros::Time::now().toSec();
+    }//if
 
-    //run compensator at the same time as imu data received
-    switch (control_mode)
-    {
+    //check if imu/data is being integrated into odometry
+    if (msg.pose.covariance[35] < 1 && msg.twist.covariance[35] < 1) {
+      imu_data_time_ = ros::Time::now().toSec();
+    }//if
+
+    y_meas_ = tf::getYaw(msg.pose.pose.orientation);
+    yr_meas_ = msg.twist.twist.angular.z;
+    fvel_meas_ = msg.twist.twist.linear.x * std::cos(y_meas_) + msg.twist.twist.linear.y * std::sin(y_meas_);
+
+    switch (control_mode) {
         case COURSE_CONTROL:
-            update_yaw_control();
-            break;
+          update_fwd_vel_control();
+          update_yaw_control();
+          break;
         case HELM_CONTROL:
-            update_yaw_rate_control();
-            break;
+          update_yaw_rate_control();
+          break;
         case WRENCH_CONTROL:
-            break;
+          break;
         case TWIST_CONTROL:
-            update_yaw_rate_control();
-            break;
+          update_fwd_vel_control();
+          update_yaw_rate_control();
+          break;
+        case TWIST_LIN_CONTROL:
+          update_yaw_rate_control();
+          break;
         case NO_CONTROL:
-        default:
-            break;
-     }//switch
-}
+          break;
+    }//switch
+}//odom_callback
+
 
 void Controller::console_update(const ros::TimerEvent& event) {
 
@@ -251,6 +275,10 @@ void Controller::console_update(const ros::TimerEvent& event) {
             break;
         case TWIST_CONTROL:
             output = "Boat controlling forward and yaw velocity";
+            break;
+        case TWIST_LIN_CONTROL:
+            output = "Boat controlling yaw velocity and mapping velocity linearly";
+            break;
         case NO_CONTROL:
             output = "No commands being processed";
             break;
@@ -262,7 +290,7 @@ void Controller::console_update(const ros::TimerEvent& event) {
         output+=": IMU data not received or being received too slowly";
 
      if (vel_timeout_)
-         output+=": Forward velocity data not received or being received too slowly";
+        output+=": GPS Velocity data not received or being received too slowly";
 
      ROS_INFO("%s",output.c_str());
 }
@@ -281,12 +309,14 @@ void Controller::control_update(const ros::TimerEvent& event) {
         vel_timeout_ = false;
     }//else
 
-    if (ros::Time::now().toSec() - course_cmd_time_ < course_cmd_timeout_ && !vel_timeout_ && !imu_timeout_) { //prioritize yaw command, make sure imu data is fresh
-        control_mode=COURSE_CONTROL;
-    } else if(ros::Time::now().toSec() - helm_cmd_time_ < helm_cmd_timeout_ and !imu_timeout_) {
-        control_mode=HELM_CONTROL;
-    } else if (ros::Time::now().toSec() - twist_cmd_time_ < twist_cmd_timeout_ && !imu_timeout_ && !vel_timeout_) {
+    if (ros::Time::now().toSec() - twist_cmd_time_ < twist_cmd_timeout_ && !imu_timeout_ && !vel_timeout_) {
         control_mode=TWIST_CONTROL;
+    } else if (ros::Time::now().toSec() - twist_cmd_time_ < twist_cmd_timeout_ && !imu_timeout_) {
+        control_mode=TWIST_LIN_CONTROL;
+    } else if (ros::Time::now().toSec() - course_cmd_time_ < course_cmd_timeout_ && !imu_timeout_ && !vel_timeout_) {
+        control_mode=COURSE_CONTROL;
+    } else if(ros::Time::now().toSec() - helm_cmd_time_ < helm_cmd_timeout_ && !imu_timeout_) {
+        control_mode=HELM_CONTROL;
     } else if(ros::Time::now().toSec() - wrench_cmd_time_ < wrench_cmd_timeout_) {
         control_mode=WRENCH_CONTROL;
     } else {
@@ -297,28 +327,6 @@ void Controller::control_update(const ros::TimerEvent& event) {
 
     force_compensator_->pub_thrust_cmd(force_output_);
 }
-
-//currently using navsat/vel topic for velocity
-void Controller::vel_callback(const geometry_msgs::Vector3Stamped msg) {
-
-    vel_data_time_ = ros::Time::now().toSec();
-    fvel_meas_ = msg.vector.x * std::cos(y_meas_) + msg.vector.y * std::sin(y_meas_);
-
-    switch (control_mode) {
-        case COURSE_CONTROL:
-          update_fwd_vel_control();
-          break;
-        case HELM_CONTROL:
-          break;
-        case WRENCH_CONTROL:
-          break;
-        case TWIST_CONTROL:
-          update_fwd_vel_control();
-          break;
-        case NO_CONTROL:
-          break;
-    }//switch
-}//vel_callback
 
 int main(int argc, char **argv)
 {
@@ -331,8 +339,7 @@ int main(int argc, char **argv)
     ros::Subscriber helm_sub = nh.subscribe("cmd_helm",1, &Controller::helm_callback,&kf_control);
     ros::Subscriber course_sub = nh.subscribe("cmd_course",1, &Controller::course_callback,&kf_control);
 
-    ros::Subscriber imu_sub = nh.subscribe("imu/data",1, &Controller::imu_callback, &kf_control);
-    ros::Subscriber vel_sub = nh.subscribe("navsat/vel",1, &Controller::vel_callback, &kf_control);
+    ros::Subscriber odom_sub = nh.subscribe("odometry/filtered",1, &Controller::odom_callback, &kf_control);
 
     ros::Timer control_output = nh.createTimer(ros::Duration(1/50.0), &Controller::control_update,&kf_control);
     ros::Timer console_update = nh.createTimer(ros::Duration(1), &Controller::console_update, &kf_control);
