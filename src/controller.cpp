@@ -148,9 +148,9 @@ double Controller::y_compensator() {
 
 void Controller::fwd_vel_mapping() {
   if (fvel_cmd_ < 0) {
-    force_output_.force.x = 2 * max_fwd_force_ * fvel_cmd_ / max_fwd_vel_; //two thrusters
+    force_output_.force.x = max_fwd_force_ * fvel_cmd_ / max_fwd_vel_;
   } else {
-      force_output_.force.x = 2 * max_bck_force_ * fvel_cmd_ / max_bck_vel_; //two thrusters
+      force_output_.force.x = max_bck_force_ * fvel_cmd_ / max_bck_vel_;
   }//else
 }//fwd_vel_mapping
 
