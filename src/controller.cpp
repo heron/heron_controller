@@ -226,7 +226,7 @@ void Controller::helm_callback(const heron_msgs::Helm msg) {
 void Controller::odom_callback(const nav_msgs::Odometry msg) {
 
     //check if navsat/vel is being integrated into odometry
-    if (msg.twist.covariance[0] < vel_cov_limit_ && msg.twist.covariance[6] < vel_cov_limit_) {
+    if (msg.twist.covariance[0] < vel_cov_limit_ && msg.twist.covariance[7] < vel_cov_limit_) {
       vel_data_time_ = ros::Time::now().toSec();
     }//if
 
