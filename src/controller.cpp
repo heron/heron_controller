@@ -18,20 +18,6 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
     vel_data_time_ = 0;
     vel_timeout_ = true;
 
-    //Timeouts for control formats
-    //if no command has been received in a while, stop sending drive commands
-    prv_node_.param<double>("course_cmd/timeout",course_cmd_timeout_,0.5);
-    course_cmd_time_ = 0;
-
-    prv_node_.param<double>("helm_cmd/timeout", helm_cmd_timeout_,0.5);
-    helm_cmd_time_ = 0;
-
-    prv_node_.param<double>("wrench_cmd/timeout",wrench_cmd_timeout_,0.5);
-    wrench_cmd_time_ = 0;
-
-    prv_node_.param<double>("twist_cmd/timeout",twist_cmd_timeout_,0.5);//If the commands dont show up in this much time don't send out drive commands
-    twist_cmd_time_ = 0;
-
     //Setup Fwd Vel Controller
     fvel_dbg_pub_ = node_.advertise<geometry_msgs::Vector3>("fwd_vel_debug",1000);
     prv_node_.param<double>("fwd_vel/kf", fvel_kf_,10); //Feedforward Gain
@@ -312,21 +298,31 @@ void Controller::control_update(const ros::TimerEvent& event) {
         vel_timeout_ = false;
     }//else
 
-    if (ros::Time::now().toSec() - twist_cmd_time_ < twist_cmd_timeout_ && !imu_timeout_ && !vel_timeout_) {
-        control_mode=TWIST_CONTROL;
-    } else if (ros::Time::now().toSec() - twist_cmd_time_ < twist_cmd_timeout_ && !imu_timeout_) {
-        control_mode=TWIST_LIN_CONTROL;
-    } else if (ros::Time::now().toSec() - course_cmd_time_ < course_cmd_timeout_ && !imu_timeout_ && !vel_timeout_) {
-        control_mode=COURSE_CONTROL;
-    } else if(ros::Time::now().toSec() - helm_cmd_time_ < helm_cmd_timeout_ && !imu_timeout_) {
-        control_mode=HELM_CONTROL;
-    } else if(ros::Time::now().toSec() - wrench_cmd_time_ < wrench_cmd_timeout_) {
-        control_mode=WRENCH_CONTROL;
-    } else {
-        control_mode=NO_CONTROL;
-        force_output_.torque.z = 0;
-        force_output_.force.x = 0;
-    }//else
+    std::vector<double> find_latest;
+    find_latest.push_back(twist_cmd_time_);
+    find_latest.push_back(course_cmd_time_);
+    find_latest.push_back(helm_cmd_time_);
+    find_latest.push_back(wrench_cmd_time_);
+    double max = *std::max_element(find_latest.begin(), find_latest.end());
+
+    if (max == 0) {
+      control_mode=NO_CONTROL;
+      force_output_.torque.z = 0;
+      force_output_.force.x = 0;
+    } else if (max == twist_cmd_time_ && !imu_timeout_ && !vel_timeout_) {
+      control_mode=TWIST_CONTROL;
+    } else if (max == twist_cmd_time_ && !imu_timeout_) {
+      control_mode=TWIST_LIN_CONTROL;
+    } else if (max == course_cmd_time_ && !imu_timeout_ && !vel_timeout_) {
+      control_mode=COURSE_CONTROL;
+    } else if(max == helm_cmd_time_ && !imu_timeout_) {
+      control_mode=HELM_CONTROL;
+    } else if(max == wrench_cmd_time_) {
+      control_mode=WRENCH_CONTROL;
+    }//elseif
+
+    fvel_pid_.printValues();
+    yr_pid_.printValues();
 
     force_compensator_->pub_thrust_cmd(force_output_);
 }

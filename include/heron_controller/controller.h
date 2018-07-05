@@ -31,13 +31,9 @@ class Controller {
 
         //Vars to hold time since last cmd
         double course_cmd_time_;
-        double course_cmd_timeout_;
         double helm_cmd_time_;
-        double helm_cmd_timeout_;
         double wrench_cmd_time_;
-        double wrench_cmd_timeout_;
         double twist_cmd_time_;
-        double twist_cmd_timeout_;
 
         control_toolbox::Pid fvel_pid_;
         ros::Publisher fvel_dbg_pub_;
