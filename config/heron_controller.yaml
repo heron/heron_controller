@@ -9,12 +9,12 @@ fwd_vel:
   imin: 0
 
 yaw_rate:
-  kf: 50
+  kf: 0
   kp: 40
-  ki: 0 # 30
-  kd: 30
-  imax: 50.0
-  imin: -50.0
+  ki: 0
+  kd: 0
+  imax: 0.0
+  imin: -0.0
 
 yaw:
   kf: 5
