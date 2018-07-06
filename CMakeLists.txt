@@ -8,6 +8,13 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
+add_service_files(
+  FILES
+  ActivateControl.srv
+)
+
+generate_messages()
+
 catkin_package(
   INCLUDE_DIRS include
 )
@@ -40,4 +47,3 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h"
   PATTERN ".svn" EXCLUDE
 )
-

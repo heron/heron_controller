@@ -13,6 +13,7 @@
 #include <heron_controller/force_compensator.h>
 #include <heron_msgs/Helm.h>
 #include <heron_msgs/Course.h>
+#include <heron_controller/ActivateControl.h>
 
 
 class Controller {
@@ -57,6 +58,9 @@ class Controller {
 
         int control_mode; //Helm, Course, Twist, or Raw Wrench
 
+        ros::ServiceServer active_control_srv;
+        bool is_active_control;
+
     public:
         Controller(ros::NodeHandle &n);
         ~Controller() {
@@ -81,4 +85,6 @@ class Controller {
 
         void control_update(const ros::TimerEvent& event);
         void console_update(const ros::TimerEvent& event);
+
+        bool activate_control_service(heron_controller::ActivateControl::Request& req, heron_controller::ActivateControl::Response& resp);
 };

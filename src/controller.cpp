@@ -8,6 +8,9 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
 
     ros::NodeHandle prv_node_("~");
 
+    active_control_srv = node_.advertiseService("activate_control", &Controller::activate_control_service, this);
+    is_active_control = true;
+
     //Timeouts for sensors
     //if no data has been received in a while, disable certain PID controls
     prv_node_.param<double>("imu_data_timeout", imu_data_timeout_, 1/5.0);
@@ -321,10 +324,18 @@ void Controller::control_update(const ros::TimerEvent& event) {
       control_mode=WRENCH_CONTROL;
     }//elseif
 
-    fvel_pid_.printValues();
-    yr_pid_.printValues();
+    if (!is_active_control) {
+        return;
+    }//if
+
 
     force_compensator_->pub_thrust_cmd(force_output_);
+}
+
+bool Controller::activate_control_service(heron_controller::ActivateControl::Request& req, heron_controller::ActivateControl::Response& resp) {
+  is_active_control = req.set_active;
+  resp.is_active = is_active_control;
+  return true;
 }
 
 int main(int argc, char **argv)
