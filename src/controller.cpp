@@ -140,25 +140,39 @@ double Controller::y_compensator() {
     return y_comp_output;
 }
 
-void Controller::fwd_vel_mapping() {
-  if (fvel_cmd_ < 0) {
-    force_output_.force.x = max_fwd_force_ * fvel_cmd_ / max_fwd_vel_;
+double deadzone_force(double force, double pos_limit, double neg_limit) {
+  if (force > 0) {
+    if (force < pos_limit) {
+        return 0;
+    }//if
   } else {
-      force_output_.force.x = max_bck_force_ * fvel_cmd_ / max_bck_vel_;
+    if (force > -neg_limit) {
+        return 0;
+    }//if
+  }//else
+
+  return force;
+}
+
+void Controller::fwd_vel_mapping() {
+  if (fvel_cmd_ > 0) {
+    force_output_.force.x = deadzone_force(max_fwd_force_ * fvel_cmd_ / max_fwd_vel_, max_fwd_force_ * 0.06, max_bck_force_ * 0.06);
+  } else {
+      force_output_.force.x = deadzone_force(max_bck_force_ * fvel_cmd_ / max_bck_vel_, max_fwd_force_ * 0.06, max_bck_force_ * 0.06);
   }//else
 }//fwd_vel_mapping
 
 void Controller::update_fwd_vel_control() {
-  force_output_.force.x = fvel_compensator();
+  force_output_.force.x = deadzone_force(fvel_compensator(), max_fwd_force_ * 0.06, max_bck_force_ * 0.06);
 }
 
 void Controller::update_yaw_rate_control() {
-  force_output_.torque.z = yr_compensator();
+  force_output_.torque.z = deadzone_force(yr_compensator(), 2, 2);
 }
 
 void Controller::update_yaw_control() {
   yr_cmd_ = y_compensator();
-  force_output_.torque.z = yr_compensator();
+  force_output_.torque.z = deadzone_force(yr_compensator(), 2, 2);
 }
 
 //Callback to receive twist msgs (cmd_vel style)
