@@ -21,6 +21,11 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
     vel_data_time_ = 0;
     vel_timeout_ = true;
 
+    twist_cmd_time_ = 0;
+    course_cmd_time_ = 0;
+    helm_cmd_time_ = 0;
+    wrench_cmd_time_ = 0;
+
     //Setup Fwd Vel Controller
     fvel_dbg_pub_ = node_.advertise<geometry_msgs::Vector3>("fwd_vel_debug",1000);
     prv_node_.param<double>("fwd_vel/kf", fvel_kf_,10); //Feedforward Gain
@@ -302,9 +307,16 @@ void Controller::control_update(const ros::TimerEvent& event) {
     }//else
 
     std::vector<double> find_latest;
-    find_latest.push_back(twist_cmd_time_);
-    find_latest.push_back(course_cmd_time_);
-    find_latest.push_back(helm_cmd_time_);
+
+    if (!imu_timeout_) {
+      find_latest.push_back(twist_cmd_time_);
+      find_latest.push_back(helm_cmd_time_);
+    }//if
+
+    if (!imu_timeout_ && !vel_timeout_) {
+        find_latest.push_back(course_cmd_time_);
+    }//if
+
     find_latest.push_back(wrench_cmd_time_);
     double max = *std::max_element(find_latest.begin(), find_latest.end());
 
@@ -312,6 +324,7 @@ void Controller::control_update(const ros::TimerEvent& event) {
       control_mode=NO_CONTROL;
       force_output_.torque.z = 0;
       force_output_.force.x = 0;
+      return;
     } else if (max == twist_cmd_time_ && !imu_timeout_ && !vel_timeout_) {
       control_mode=TWIST_CONTROL;
     } else if (max == twist_cmd_time_ && !imu_timeout_) {
