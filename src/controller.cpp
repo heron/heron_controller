@@ -89,7 +89,7 @@ Controller::Controller(ros::NodeHandle &n):node_(n) {
     prv_node_.param<double>("max/bck_vel",max_bck_vel_,MAX_BCK_VEL);
     prv_node_.param<double>("max/bck_force",max_bck_force_,2*MAX_BCK_THRUST);
 
-    prv_node_.param<double>("cov_limits/velocity", vel_cov_limit_, 0.22);
+    prv_node_.param<double>("cov_limits/velocity", vel_cov_limit_, 0.28);
     prv_node_.param<double>("cov_limits/imu", imu_cov_limit_, 1.0);
 
     force_output_.force.x = 0;
