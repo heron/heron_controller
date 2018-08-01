@@ -1,14 +1,10 @@
 #include <ros/ros.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/Joy.h>
 #include <control_toolbox/pid.h>
-#include <string.h>
 #include <tf/tf.h>
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Wrench.h>
-#include <std_msgs/Float32.h>
 #include <heron_controller/heron_constants.h>
 #include <heron_controller/force_compensator.h>
 #include <heron_msgs/Helm.h>
