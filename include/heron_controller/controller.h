@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <control_toolbox/pid.h>
 #include <tf/tf.h>
+#include "string.h"
 #include <geometry_msgs/Twist.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
