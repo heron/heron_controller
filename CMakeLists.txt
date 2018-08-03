@@ -9,12 +9,8 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   heron_msgs
   sensor_msgs
+  std_srvs
   tf
-)
-
-add_service_files(
-  FILES
-  ActivateControl.srv
 )
 
 generate_messages()
