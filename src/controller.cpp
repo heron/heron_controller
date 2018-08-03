@@ -391,9 +391,11 @@ void Controller::control_update(const ros::TimerEvent& event) {
     force_compensator_->pub_thrust_cmd(force_output_);
 }
 
-bool Controller::activate_control_service(heron_controller::ActivateControl::Request& req, heron_controller::ActivateControl::Response& resp) {
-  is_active_control = req.set_active;
-  resp.is_active = is_active_control;
+bool Controller::activate_control_service(std_srvs::SetBool::Request& req,
+                                          std_srvs::SetBool::Response& resp) {
+  is_active_control = req.data;
+  resp.success = is_active_control;
+  resp.message = "Activated Control.";
   return true;
 }
 
@@ -401,17 +403,17 @@ int main(int argc, char **argv)
 {
     ros::init(argc,argv, "controller");
     ros::NodeHandle nh;
-    Controller kf_control(nh);
+    Controller heron_control(nh);
 
-    ros::Subscriber twist_sub = nh.subscribe("cmd_vel",1,&Controller::twist_callback, &kf_control);
-    ros::Subscriber wrench_sub = nh.subscribe("cmd_wrench",1, &Controller::wrench_callback, &kf_control);
-    ros::Subscriber helm_sub = nh.subscribe("cmd_helm",1, &Controller::helm_callback,&kf_control);
-    ros::Subscriber course_sub = nh.subscribe("cmd_course",1, &Controller::course_callback,&kf_control);
+    ros::Subscriber twist_sub = nh.subscribe("cmd_vel",1,&Controller::twist_callback, &heron_control);
+    ros::Subscriber wrench_sub = nh.subscribe("cmd_wrench",1, &Controller::wrench_callback, &heron_control);
+    ros::Subscriber helm_sub = nh.subscribe("cmd_helm",1, &Controller::helm_callback,&heron_control);
+    ros::Subscriber course_sub = nh.subscribe("cmd_course",1, &Controller::course_callback,&heron_control);
 
-    ros::Subscriber odom_sub = nh.subscribe("odometry/filtered",1, &Controller::odom_callback, &kf_control);
+    ros::Subscriber odom_sub = nh.subscribe("odometry/filtered",1, &Controller::odom_callback, &heron_control);
 
-    ros::Timer control_output = nh.createTimer(ros::Duration(1/50.0), &Controller::control_update,&kf_control);
-    ros::Timer console_update = nh.createTimer(ros::Duration(1), &Controller::console_update, &kf_control);
+    ros::Timer control_output = nh.createTimer(ros::Duration(1/50.0), &Controller::control_update,&heron_control);
+    ros::Timer console_update = nh.createTimer(ros::Duration(1), &Controller::console_update, &heron_control);
 
     ros::spin();
 

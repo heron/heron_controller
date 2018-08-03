@@ -6,11 +6,13 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Wrench.h>
+#include <std_msgs/Float32.h>
+#include <std_srvs/SetBool.h>
 #include <heron_controller/heron_constants.h>
 #include <heron_controller/force_compensator.h>
 #include <heron_msgs/Helm.h>
 #include <heron_msgs/Course.h>
-#include <heron_controller/ActivateControl.h>
+
 
 
 class Controller {
@@ -83,5 +85,5 @@ class Controller {
         void control_update(const ros::TimerEvent& event);
         void console_update(const ros::TimerEvent& event);
 
-        bool activate_control_service(heron_controller::ActivateControl::Request& req, heron_controller::ActivateControl::Response& resp);
+        bool activate_control_service(std_srvs::SetBool::Request& req, std_srvs::SetBool::Response& resp);
 };
