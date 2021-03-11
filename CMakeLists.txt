@@ -13,8 +13,6 @@ find_package(catkin REQUIRED COMPONENTS
   tf
 )
 
-generate_messages()
-
 catkin_package(
   INCLUDE_DIRS include
 )

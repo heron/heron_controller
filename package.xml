@@ -17,7 +17,6 @@
   <depend>heron_msgs</depend>
   <depend>sensor_msgs</depend>
   <depend>tf</depend>
-  <depend>message_runtime</depend>
 
   <export>
   </export>
