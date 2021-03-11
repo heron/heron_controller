@@ -2,8 +2,8 @@
 Changelog for package heron_controller
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.2.0 (2021-03-11)
+------------------
 * Bumped CMake version to avoid author warning.
 * Minor linting changes.
 * Switched to BSD licence.
