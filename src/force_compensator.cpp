@@ -39,7 +39,7 @@ double ForceCompensator::calculate_motor_setting (double thrust) {
         output = thrust * (MAX_OUTPUT/MAX_FWD_THRUST);
     else if (thrust < 0)
         output = thrust * (MAX_OUTPUT/MAX_BCK_THRUST);
-    return output; 
+    return output;
 }
 
 double ForceCompensator::saturate_thrusters (double thrust) {
@@ -62,13 +62,13 @@ void ForceCompensator::pub_thrust_cmd (geometry_msgs::Wrench output) {
     tauz = std::max(tauz, -max_tauz);
 
     //Guarantee atleast max yaw torque
-    double left_thrust = -tauz/(2*BOAT_WIDTH); 
+    double left_thrust = -tauz/(2*BOAT_WIDTH);
     double right_thrust = tauz/(2*BOAT_WIDTH);
 
-    //Provide maximum allowable thrust after yaw torque is guaranteed 
+    //Provide maximum allowable thrust after yaw torque is guaranteed
     double max_fx = 0;
     if (tauz >= 0) {
-        if (fx >= 0) { //forward thrust on the left thruster will be limiting factor 
+        if (fx >= 0) { //forward thrust on the left thruster will be limiting factor
             max_fx = (MAX_FWD_THRUST - left_thrust) * 2;
             fx = std::min(max_fx,fx);
         }
@@ -77,7 +77,7 @@ void ForceCompensator::pub_thrust_cmd (geometry_msgs::Wrench output) {
             fx = std::max(max_fx,fx);
         }
     }
-    else { 
+    else {
         if (fx >= 0 ) {
             max_fx = (MAX_FWD_THRUST - right_thrust) * 2;
             fx = std::min(max_fx,fx);
@@ -90,7 +90,7 @@ void ForceCompensator::pub_thrust_cmd (geometry_msgs::Wrench output) {
 
     left_thrust += fx/2.0;
     right_thrust += fx/2.0;
-    
+
     left_thrust = saturate_thrusters (left_thrust);
     right_thrust = saturate_thrusters (right_thrust);
 
@@ -102,11 +102,10 @@ void ForceCompensator::pub_thrust_cmd (geometry_msgs::Wrench output) {
 }
 
 
-//take in left and right thrusts (0...1) settings and back calculate what the effective wrench being sent out is. This is a reverse calculation of what is done in "update_forces" and shows the user what the limitations of the thrust settings are. 
+//take in left and right thrusts (0...1) settings and back calculate what the effective wrench being sent out is. This is a reverse calculation of what is done in "update_forces" and shows the user what the limitations of the thrust settings are.
 void ForceCompensator::pub_effective_wrench(double left_thrust,double right_thrust) {
     geometry_msgs::Wrench effective_output;
     effective_output.force.x = left_thrust + right_thrust;
     effective_output.torque.z = (right_thrust - left_thrust)*BOAT_WIDTH;
-    eff_pub_.publish(effective_output);  
+    eff_pub_.publish(effective_output);
 }
-
